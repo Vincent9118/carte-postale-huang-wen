@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Une Carte Postale de France | 來自法國的明信片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #f4efe6;
+    --env-body: #e8dec8;
+    --env-flap: #dfd2b5;
+    --env-shadow: #cfc0a0;
+    --ink-color: #2c2825;
+    --accent-red: #9e3b33;
+    --accent-blue: #2b4c7e;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(#dfd6c5 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: var(--ink-color);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    padding: 20px;
+  }
+
+  /* 通用淡入淡出控制 */
+  .stage {
+    width: 100%;
+    max-width: 680px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.8s ease forwards;
+  }
+
+  .stage.active {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ================= 階段一：輸入中文名字 ================= */
+  .login-card {
+    background: #fcfaf5;
+    padding: 48px 36px;
+    border-radius: 4px;
+    box-shadow: 0 15px 35px rgba(44, 40, 37, 0.08);
+    border: 1px solid #e5dccb;
+    text-align: center;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+  }
+
+  .login-card::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid #ece4d5;
+    pointer-events: none;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #7a7067;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: 0.06em;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  input[type="text"] {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    border: 1px solid #cbbba0;
+    background: #fff;
+    border-radius: 3px;
+    text-align: center;
+    color: var(--ink-color);
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent-blue);
+  }
+
+  button.primary-btn {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1rem;
+    padding: 12px 24px;
+    background-color: var(--ink-color);
+    color: #fcfaf5;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: background-color 0.3s, transform 0.1s;
+  }
+
+  button.primary-btn:hover {
+    background-color: #463f3a;
+  }
+
+  button.primary-btn:active {
+    transform: scale(0.98);
+  }
+
+  .error-msg {
+    color: var(--accent-red);
+    font-size: 0.92rem;
+    margin-top: 14px;
+    min-height: 1.4em;
+  }
+
+  /* ================= 階段二：法式信封動畫 ================= */
+  .envelope-hint {
+    margin-bottom: 28px;
+    font-size: 1.05rem;
+    color: #5e554e;
+    letter-spacing: 0.08em;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 1; }
+  }
+
+  .envelope-wrapper {
+    position: relative;
+    width: 320px;
+    height: 210px;
+    cursor: pointer;
+    perspective: 1000px;
+    transition: transform 0.3s ease;
+  }
+
+  @media (min-width: 480px) {
+    .envelope-wrapper {
+      width: 380px;
+      height: 250px;
+    }
+  }
+
+  .envelope-wrapper:hover {
+    transform: translateY(-4px);
+  }
+
+  /* 信封背板 */
+  .envelope-back {
+    position: absolute;
+    inset: 0;
+    background-color: var(--env-shadow);
+    border-radius: 4px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.14);
+  }
+
+  /* 藏在信封裡的小卡片預覽 */
+  .card-preview {
+    position: absolute;
+    left: 5%;
+    right: 5%;
+    bottom: 10px;
+    height: 85%;
+    background: #fff;
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .card-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+  }
+
+  /* 信封左右與下方折頁 */
+  .envelope-front {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+
+  .envelope-front::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--env-body) 50%, transparent 50%),
+                linear-gradient(225deg, var(--env-body) 50%, transparent 50%);
+    background-position: bottom left, bottom right;
+    background-size: 50.5% 100%;
+    background-repeat: no-repeat;
+  }
+
+  .envelope-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 62%;
+    background: #ede3cf;
+    clip-path: polygon(0 100%, 50% 0, 100% 100%);
+    z-index: 4;
+    pointer-events: none;
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+
+  /* 信封上蓋 */
+  .envelope-flap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 58%;
+    background: var(--env-flap);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top center;
+    transition: transform 0.65s ease-in-out, z-index 0.2s;
+    z-index: 5;
+  }
+
+  /* 法式郵戳與收件人名字 */
+  .envelope-details {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .postmark {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 68px;
+    height: 68px;
+    border: 1.5px dashed rgba(43, 76, 126, 0.55);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-blue);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    transform: rotate(12deg);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .recipient-label {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--ink-color);
+    letter-spacing: 0.08em;
+  }
+
+  .recipient-label span {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: #6b6056;
+    margin-right: 6px;
+  }
+
+  /* 打開信封時的動畫狀態 */
+  .envelope-wrapper.opened .envelope-flap {
+    transform: rotateX(180deg);
+    z-index: 1;
+  }
+
+  .envelope-wrapper.opened .envelope-details {
+    opacity: 0;
+  }
+
+  .envelope-wrapper.opened .card-preview {
+    transform: translateY(-65%);
+  }
+
+  /* ================= 階段三：3D 翻轉明信片 ================= */
+  .viewer-header {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .viewer-header p {
+    font-size: 0.95rem;
+    color: #6e645b;
+    letter-spacing: 0.06em;
+  }
+
+  .viewer-instruction-mobile {
+    display: none;
+  }
+
+  .postcard-scene {
+    width: 100%;
+    max-width: 640px;
+    perspective: 1800px;
+    cursor: pointer;
+    margin: 0 auto;
+  }
+
+  .postcard-inner {
+    position: relative;
+    width: 100%;
+    transition: transform 0.85s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+  }
+
+  .postcard-inner.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  /* 正面靠自然圖片撐開高度，確保完整原比例不裁切 */
+  .postcard-face {
+    width: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .postcard-front {
+    position: relative;
+    z-index: 2;
+  }
+
+  .postcard-back {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+  }
+
+  .postcard-face img {
+    max-width: 100%;
+    max-height: 72dvh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 2px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
+    background: #fff;
+  }
+
+  .controls {
+    margin-top: 24px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .flip-btn {
+    font-family: 'Noto Serif TC', serif;
+    background: #fcfaf5;
+    color: var(--ink-color);
+    border: 1px solid #cbbba0;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.25s;
+  }
+
+  .flip-btn:hover {
+    background: var(--ink-color);
+    color: #fcfaf5;
+    border-color: var(--ink-color);
+  }
+
+  .back-link {
+    background: none;
+    border: none;
+    color: #7a7067;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.88rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+
+  /* 全站共用背景音樂控制 */
+  .music-player {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 14px;
+    background: rgba(252, 250, 245, 0.96);
+    border: 1px solid #cbbba0;
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(44, 40, 37, 0.14);
+  }
+
+  .music-btn {
+    flex: 0 0 auto;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    background: var(--ink-color);
+    color: #fcfaf5;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .music-btn:focus-visible {
+    outline: 3px solid var(--accent-blue);
+    outline-offset: 3px;
+  }
+
+  .music-status {
+    color: #5e554e;
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 20px 20px 88px;
+    }
+
+    .flip-btn {
+      display: none;
+    }
+
+    .controls {
+      width: 100%;
+      margin-top: 12px;
+      justify-content: center;
+    }
+
+    .viewer-instruction-desktop {
+      display: none;
+    }
+
+    .viewer-instruction-mobile {
+      display: inline;
+    }
+
+    .music-player {
+      right: 10px;
+      bottom: 10px;
+      left: 10px;
+      justify-content: center;
+      margin: 0 auto;
+      width: max-content;
+    }
+
+    .music-status {
+      max-width: 44vw;
+    }
+  }
+
+</style>
+</head>
+<body>
+  <div class="music-player">
+    <button type="button" class="music-btn" id="music-toggle" aria-pressed="false" onclick="toggleMusic()">▶ 播放音樂</button>
+    <span class="music-status" id="music-status" role="status" aria-live="polite">正在嘗試播放背景音樂</span>
+    <audio id="site-music" src="audio/les-copains-dabord.mp3" preload="auto" loop></audio>
+  </div>
+
+  <!-- 階段一：輸入名字 -->
+  <div id="stage-login" class="stage active">
+    <div class="login-card">
+      <div class="subtitle">De Clermont-Ferrand, France</div>
+      <h1>來自法國的明信片</h1>
+      <form class="input-group" onsubmit="handleCheckName(event)">
+        <input type="text" id="recipient-input" placeholder="請輸入你的名字" autocomplete="off" required>
+        <button type="submit" class="primary-btn">開啟信箱</button>
+      </form>
+      <div id="error-msg" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- 階段二：拆信封動畫 -->
+  <div id="stage-envelope" class="stage">
+    <div class="envelope-hint">你有一封來自法國的信，點擊信封開啟</div>
+    <div class="envelope-wrapper" id="envelope" onclick="openEnvelope()">
+      <div class="envelope-back"></div>
+      <div class="card-preview">
+        <img id="preview-img" src="" alt="明信片預覽">
+      </div>
+      <div class="envelope-front"></div>
+      <div class="envelope-bottom"></div>
+      <div class="envelope-flap"></div>
+      <div class="envelope-details">
+        <div class="postmark">
+          <span>LA POSTE</span>
+          <strong>FRANCE</strong>
+          <span>2026</span>
+        </div>
+        <div class="recipient-label"><span>Pour :</span><strong id="envelope-name"></strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 階段三：3D 翻轉檢視明信片 -->
+  <div id="stage-viewer" class="stage">
+    <div class="viewer-header">
+      <p id="viewer-status"><span class="viewer-instruction-desktop">點擊明信片或下方按鈕翻面閱讀</span><span class="viewer-instruction-mobile">點擊明信片翻面閱讀</span></p>
+    </div>
+
+    <div class="postcard-scene" onclick="flipCard()">
+      <div class="postcard-inner" id="postcard-inner">
+        <div class="postcard-face postcard-front">
+          <img id="img-front" src="" alt="明信片正面">
+        </div>
+        <div class="postcard-face postcard-back">
+          <img id="img-back" src="" alt="明信片背面">
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button type="button" class="flip-btn" onclick="flipCard()">
+        ↻ 翻轉明信片（正面 / 背面）
+      </button>
+      <button type="button" class="back-link" onclick="resetAll()">重新輸入名字</button>
+    </div>
+  </div>
+
+<script>
+  // 每人的明信片放在 images/姓名/，正面為姓名_1.jpg，背面為姓名_2.jpg。
+  const IMAGE_FOLDER = 'images/';
+
+  let isEnvelopeOpened = false;
+  let isFlipped = false;
+
+  function switchStage(stageId) {
+    document.querySelectorAll('.stage').forEach(el => el.classList.remove('active'));
+    document.getElementById(stageId).classList.add('active');
+  }
+
+  function handleCheckName(e) {
+    e.preventDefault();
+    const inputEl = document.getElementById('recipient-input');
+    const errorEl = document.getElementById('error-msg');
+    const rawName = inputEl.value.trim();
+
+    if (!rawName) return;
+
+    errorEl.textContent = '正在尋找你的明信片...';
+
+    // 每個人的明信片使用自己的資料夾；_1 是正面，_2 是背面。
+    const normalizedName = rawName.toLowerCase();
+    const displayName = normalizedName.charAt(0).toUpperCase() + normalizedName.slice(1);
+    const encodedName = encodeURIComponent(normalizedName);
+    const personFolder = `${IMAGE_FOLDER}${encodedName}/`;
+    const frontPath = `${personFolder}${encodedName}_1.jpg`;
+    const backPath = `${personFolder}${encodedName}_2.jpg`;
+
+    // 預先載入確認圖片是否存在
+    const testFront = new Image();
+    testFront.onload = function() {
+      errorEl.textContent = '';
+      document.getElementById('envelope-name').textContent = displayName;
+      document.getElementById('preview-img').src = frontPath;
+      document.getElementById('img-front').src = frontPath;
+      document.getElementById('img-back').src = backPath;
+
+      isEnvelopeOpened = false;
+      isFlipped = false;
+      document.getElementById('envelope').classList.remove('opened');
+      document.getElementById('postcard-inner').classList.remove('is-flipped');
+
+      switchStage('stage-envelope');
+    };
+
+    testFront.onerror = function() {
+      errorEl.textContent = `找不到「${rawName}」的明信片喔，請確認是否輸入全名！`;
+    };
+
+    testFront.src = frontPath;
+  }
+
+  function openEnvelope() {
+    if (isEnvelopeOpened) return;
+    isEnvelopeOpened = true;
+
+    const envEl = document.getElementById('envelope');
+    envEl.classList.add('opened');
+
+    // 等信封掀開、卡片抽出後，平滑切換至全螢幕翻轉檢視模式
+    setTimeout(() => {
+      switchStage('stage-viewer');
+    }, 1150);
+  }
+
+  function flipCard() {
+    isFlipped = !isFlipped;
+    const cardInner = document.getElementById('postcard-inner');
+    const statusText = document.getElementById('viewer-status');
+
+    if (isFlipped) {
+      cardInner.classList.add('is-flipped');
+      statusText.textContent = '目前顯示：背面手寫訊息（點擊翻回正面）';
+    } else {
+      cardInner.classList.remove('is-flipped');
+      statusText.textContent = '目前顯示：正面攝影作品（點擊翻看背面）';
+    }
+  }
+
+  function resetAll() {
+    document.getElementById('recipient-input').value = '';
+    document.getElementById('error-msg').textContent = '';
+    switchStage('stage-login');
+  }
+
+  // 網站全頁共用同一首背景音樂。瀏覽器若阻擋載入時播放，首次互動會再嘗試。
+  const siteMusic = document.getElementById('site-music');
+  const musicToggle = document.getElementById('music-toggle');
+  const musicStatus = document.getElementById('music-status');
+  let musicHasStarted = false;
+
+  function updateMusicUI(isPlaying, message) {
+    musicToggle.textContent = isPlaying ? '❚❚ 暫停音樂' : '▶ 播放音樂';
+    musicToggle.setAttribute('aria-pressed', String(isPlaying));
+    if (message) musicStatus.textContent = message;
+  }
+
+  async function playSiteMusic() {
+    try {
+      await siteMusic.play();
+      musicHasStarted = true;
+      updateMusicUI(true, '全站背景音樂播放中');
+      return true;
+    } catch (error) {
+      updateMusicUI(false, '瀏覽器限制自動播放，點擊「播放音樂」即可開始');
+      return false;
+    }
+  }
+
+  async function toggleMusic() {
+    if (!siteMusic.paused) {
+      siteMusic.pause();
+      updateMusicUI(false, '背景音樂已暫停');
+      return;
+    }
+    await playSiteMusic();
+  }
+
+  function startMusicAfterFirstInteraction(event) {
+    if (event.target.closest && event.target.closest('#music-toggle')) return;
+    if (musicHasStarted || !siteMusic.paused) return;
+    playSiteMusic();
+  }
+
+  document.addEventListener('pointerdown', startMusicAfterFirstInteraction, { passive: true });
+  document.addEventListener('keydown', startMusicAfterFirstInteraction);
+  siteMusic.addEventListener('error', () => {
+    updateMusicUI(false, '音樂載入失敗，請重新整理頁面後再試');
+  });
+
+  // 載入時嘗試自動播放；是否能有聲播放取決於瀏覽器的自動播放政策。
+  playSiteMusic();
+
+</script>
+
+</body>
+</html>
